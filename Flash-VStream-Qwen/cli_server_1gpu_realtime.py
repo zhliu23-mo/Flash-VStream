@@ -417,8 +417,10 @@ D. A dog training session in a park"""
             with torch.inference_mode(), torch.amp.autocast('cuda', dtype=torch.bfloat16):
               generated_ids = model.generate(
                   **inputs,
-                  max_new_tokens=512,  # <-- 允许更长回复
-                  use_cache=False,
+                  max_new_tokens=512,
+                  use_cache=True,
+                  temperature=0.7,
+                  top_p=0.8,
               )
               #####
             generated_ids_trimmed = [

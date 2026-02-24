@@ -278,6 +278,7 @@ class FlashMemory(nn.Module):
         flash_memory_position_ids = visual_start_id + cat_pos_ids  # [3, L]
         assert spa_size + tem_size == visual_end_pos - visual_start_pos + 1, f"sth went wrong! check: spa_size={spa_size}, tem_size={tem_size}, visual_end_pos={visual_end_pos}, visual_start_pos={visual_start_pos}"
         # Use advanced indexing correctly: create index arrays for dimensions 0 and 1
+        position_id = position_id.clone()  # Clone to avoid index_put_ warning on expanded tensors
         row_indices = torch.arange(3, device=position_id.device).view(3, 1).expand_as(flash_memory_position_ids)
         col_indices = torch.arange(visual_start_pos, visual_start_pos + flash_memory_position_ids.shape[1], device=position_id.device).view(1, -1).expand_as(flash_memory_position_ids)
         position_id[row_indices, col_indices] = flash_memory_position_ids

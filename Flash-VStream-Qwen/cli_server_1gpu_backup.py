@@ -195,7 +195,7 @@ def video_stream_similator(video_file, frame_queue, log_queue, video_fps=1.0, pl
     logger.info(f'[Simulator] Process: end')
 
 def frame_memory_manager(model, processor, flash_memory_config, frame_queue, log_queue):
-    torch.cuda.set_device(0) ##### 1->0 gpu.device
+    torch.cuda.set_device(1)
     model = model.cuda()
     ############## Start sub process-3: Memory Manager #############
     worker_configurer(log_queue)
@@ -317,33 +317,12 @@ def main(args):
             if cuda_list is None or len(cuda_list) == 0:
                 logger.info(f'[main] cuda_list is empty, skip')
                 continue
-           # else:
+            # else:
                 # video_embed_shape = cuda_list[-1]
-                # 计算实际的 video token 数量 ####### 修改部分
-                #total_tokens = 0
-                #for embed_tensor in cuda_list:
-                 # if hasattr(embed_tensor, 'shape'):
-                 #   total_tokens += embed_tensor.shape[0]  # 累加所有视频 token
-    
-                #video_embed_size = total_tokens // 4  # 除以4是因为每个 token 有4个sub token
-                # logger.info(f'[main] cuda_list len={len(cuda_list)}, calculated video_embed_size={video_embed_size}')
-                # video_embed_size = 10800 #### 修改方案1
+                
+                # video_embed_size = 10800
                 # logger.info(f'[main] cuda_list is not empty, len={len(cuda_list)}, set video_embed_size={video_embed_size}')
-                
-                # 从 cuda_list 中获取实际的 video_embeds 形状
-                # cuda_list 结构：[tem_x, tem_thw, tem_weights, tem_timestamp, 
-                #                  spa_x, spa_thw, spa_positions, x, thw, 
-                #                  small_x, small_thw, video_embeds, video_embeds_shape]
-                # video_embeds_shape = cuda_list[-1]  # 获取最后一个元素，即 video_embeds.shape
-                
-                # video_embeds_shape 是 torch.Size([1, actual_tokens, hidden_dim])
-                # 我们需要的是第一维，而不是第二维（actual_tokens）
-                #if isinstance(video_embeds_shape, (list, tuple, torch.Size)):
-                #    actual_video_tokens = video_embeds_shape[0]
-               # else:
-                #    actual_video_tokens = int(video_embeds_shape)
-                
-                #logger.info(f'[main] cuda_list is not empty, len={len(cuda_list)}, video_embeds_shape={video_embeds_shape}, using actual_video_tokens={actual_video_tokens}')
+            
             # 从内存中读取 tem_thw 和 spa_thw
             tem_thw = cuda_list[1]   # 索引1 = tem_thw
             spa_thw = cuda_list[5]   # 索引5 = spa_thw
@@ -352,16 +331,10 @@ def main(args):
             tem_size = tem_thw.prod().item() // 4
             spa_size = spa_thw.prod().item() // 4
             actual_video_tokens = spa_size + tem_size  # = 8592
-            
-            # 关键：processor 内部会 // 4，所以这里要 * 4
+
+             # 关键：processor 内部会 // 4，所以这里要 * 4
             dummy_video_tokens_value = actual_video_tokens * 4  # = 34368
 
-            logger.info(
-                f"[main] tem_thw={tem_thw.tolist()}, spa_thw={spa_thw.tolist()}, "
-                f"tem_size={tem_size}, spa_size={spa_size}, actual_video_tokens={actual_video_tokens}, "
-                f"dummy_video_tokens_value={dummy_video_tokens_value}"
-            )
-            
             # 获取当前时间
             now = datetime.now()
             conv_start_time = time.perf_counter()
@@ -370,19 +343,14 @@ def main(args):
             duration = now.timestamp() - start_time.timestamp()
 
             # 打印当前时间
-            #inp = 'what is in the video?'
+            inp = 'what is in the video?'
             inp = \
 """Please choose the correct answer from the options below, output the option letter (A, B, C, or D):
 A. A person running a marathon and sharing their experience
 B. A cooking tutorial showing how to make a special dish
-C. A man is playing with a little girl
+C. A car review and test drive on a highway
 D. A dog training session in a park"""
             print("\nCurrent Time:", current_time, "Run for:", duration)
-            
-            inp = input("user: ")  # <-- 等待用户输入
-            if inp.lower() in ['exit', 'quit', 'q']: #
-              break #
-            
             print(f"user: {inp}", end="\n")
             print(f"assistant: ", end="")
             # every conversation is a new conversation
@@ -397,7 +365,7 @@ D. A dog training session in a park"""
             text = processor.apply_chat_template(
                 messages, tokenize=False, add_generation_prompt=True
             )
-            #text += "Best Option: (" # 不加上best option
+            text += "Best Option: ("
             inputs = processor(
                 text=[text],
                 images=None,
@@ -405,54 +373,26 @@ D. A dog training session in a park"""
                 padding=True,
                 return_tensors="pt",
                 flash_memory_config=flash_memory_config,
-                # dummy_video_tokens=video_embed_size * 4, #### 被修改
-                dummy_video_tokens=dummy_video_tokens_value,  # processor 会 // 4 得到 8592
-            )
-            try:
-                input_len = int(inputs.input_ids.shape[1])
-                attn_len = int(inputs.attention_mask.sum().item()) if hasattr(inputs, "attention_mask") else -1
-            except Exception:
-                input_len, attn_len = -1, -1
-            logger.info(
-                f"[main] prompt_len={input_len}, attn_len={attn_len}, "
-                f"max_pos={getattr(model.config, 'max_position_embeddings', 'n/a')}, "
-                f"eos_id={getattr(model.config, 'eos_token_id', 'n/a')}"
+                dummy_video_tokens=dummy_video_tokens_value,
             )
             inputs = inputs.to("cuda")
 
             llm_start_time = time.perf_counter()
-            with torch.inference_mode(), torch.amp.autocast('cuda', dtype=torch.bfloat16):
-              generated_ids = model.generate(
-                  **inputs,
-                  max_new_tokens=512,
-                  min_new_tokens=8,
-                  use_cache=True,
-                  temperature=0.7,
-                  top_p=0.8,
-              )
-              llm_times = model.user_log_times if hasattr(model, 'user_log_times') else [llm_start_time, time.perf_counter()]
+            with torch.inference_mode():
+                generated_ids = model.generate(
+                    **inputs,
+                    max_new_tokens=1,
+                    use_cache=False,
+                )
+                llm_times = model.user_log_times
             llm_end_time = time.perf_counter()
             generated_ids_trimmed = [
                 out_ids[len(in_ids):] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
             ]
-            try:
-                gen_len = int(generated_ids_trimmed[0].shape[0])
-                eos_id = getattr(model.config, 'eos_token_id', None)
-                eos_hit = bool((generated_ids_trimmed[0] == eos_id).any().item()) if eos_id is not None else False
-                logger.info(f"[main] gen_len={gen_len}, eos_hit={eos_hit}")
-            except Exception as e:
-                logger.info(f"[main] gen_len/eos check failed: {e}")
             outputs = processor.batch_decode(
                 generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
             )
             outputs = outputs[0].strip()
-            # 简单重复检测（用于定位输出卡住）
-            try:
-                toks = outputs.split()
-                rep_ratio = 1.0 - (len(set(toks)) / max(1, len(toks)))
-                logger.info(f"[main] output_len={len(outputs)}, token_count={len(toks)}, rep_ratio={rep_ratio:.3f}")
-            except Exception:
-                pass
             print(f"{outputs}", end="\n")
             conv_end_time = time.perf_counter()
             if conv_cnt > 0:
