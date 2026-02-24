@@ -277,7 +277,10 @@ class FlashMemory(nn.Module):
         cat_pos_ids = torch.cat([spa_pos_ids, tem_pos_ids], dim=1)
         flash_memory_position_ids = visual_start_id + cat_pos_ids  # [3, L]
         assert spa_size + tem_size == visual_end_pos - visual_start_pos + 1, f"sth went wrong! check: spa_size={spa_size}, tem_size={tem_size}, visual_end_pos={visual_end_pos}, visual_start_pos={visual_start_pos}"
-        position_id[:, mask] = flash_memory_position_ids  # [3, videoL]
+        # Use advanced indexing correctly: create index arrays for dimensions 0 and 1
+        row_indices = torch.arange(3, device=position_id.device).view(3, 1).expand_as(flash_memory_position_ids)
+        col_indices = torch.arange(visual_start_pos, visual_start_pos + flash_memory_position_ids.shape[1], device=position_id.device).view(1, -1).expand_as(flash_memory_position_ids)
+        position_id[row_indices, col_indices] = flash_memory_position_ids
         return position_id
 
     def forward(self, x, grid_thw, small_grid_thw, position_ids, visual_position_ids):
