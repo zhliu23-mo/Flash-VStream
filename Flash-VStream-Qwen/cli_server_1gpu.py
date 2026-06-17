@@ -424,11 +424,13 @@ D. A dog training session in a park"""
             with torch.inference_mode(), torch.amp.autocast('cuda', dtype=torch.bfloat16):
               generated_ids = model.generate(
                   **inputs,
-                  max_new_tokens=512,
+                  max_new_tokens=256,
                   min_new_tokens=8,
                   use_cache=True,
                   temperature=0.7,
                   top_p=0.8,
+                  repetition_penalty=1.1,
+                  no_repeat_ngram_size=3,
               )
               llm_times = model.user_log_times if hasattr(model, 'user_log_times') else [llm_start_time, time.perf_counter()]
             llm_end_time = time.perf_counter()

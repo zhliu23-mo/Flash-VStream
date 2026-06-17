@@ -1,0 +1,24 @@
+2026-02-24 11:27:14,222 MainProcess __main__ INFO     [main] Load processor success!, using new processor={'flash_memory_temporal_length': 40, 'flash_memory_temporal_method': 'kmeans_ordered', 'flash_memory_temporal_poolsize': 2, 'flash_memory_temporal_pca_dim': 32, 'flash_memory_spatial_length': 20, 'flash_memory_spatial_method': 'klarge_retrieve'}, instead of training time={'flash_memory_temporal_length': 40, 'flash_memory_temporal_method': 'kmeans_ordered', 'flash_memory_temporal_poolsize': 2, 'flash_memory_temporal_pca_dim': 32, 'flash_memory_spatial_length': 20, 'flash_memory_spatial_method': 'klarge_retrieve'}
+2026-02-24 11:27:21,807 MainProcess __main__ INFO     [main] Important: set video_fps = 0.5
+2026-02-24 11:27:21,807 MainProcess __main__ INFO     [main] Important: set play_speed = 1.0
+2026-02-24 11:27:42,695 Process-4  frame_memory_manager INFO     [MemManager] start
+2026-02-24 11:27:42,728 Process-3  video_stream_similator INFO     [Simulator] video_inputs=1, video_len=118, size=(364, 476, 3)
+2026-02-24 11:27:42,729 Process-3  video_stream_similator INFO     [Simulator] start, length = 118
+2026-02-24 11:27:42,730 Process-3  video_stream_similator INFO     [Simulator] Process: end
+2026-02-24 11:27:46,781 Process-4  models.compress_functions.weighted_kmeans_ordered_feature INFO     Note: time_list=[0.8610797142609954, 0.006203619763255119, 0.01367480494081974, 6.901100277900696e-07]
+2026-02-24 11:27:47,258 Process-4  frame_memory_manager INFO     [MemManager] End embedding, embedded frames (118, 364, 476, 3),	idx=0,	memory_latency=3.406164, not logged
+2026-02-24 11:27:47,258 Process-4  frame_memory_manager INFO     [MemManager] Ooops, get None
+2026-02-24 11:27:47,258 Process-4  frame_memory_manager INFO     [MemManager] end
+2026-02-24 11:28:02,470 MainProcess __main__ INFO     [main] tem_thw=[20, 12, 16], spa_thw=[10, 24, 32], tem_size=960, spa_size=1920, actual_video_tokens=2880, dummy_video_tokens_value=11520
+2026-02-24 11:28:09,764 MainProcess __main__ INFO     [main] prompt_len=2905, attn_len=2905, max_pos=32768, eos_id=151645
+2026-02-24 11:28:11,131 MainProcess __main__ INFO     [main] gen_len=9, eos_hit=True
+2026-02-24 11:28:11,131 MainProcess __main__ INFO     [main] output_len=26, token_count=5, rep_ratio=0.000
+2026-02-24 11:28:11,131 MainProcess __main__ INFO     CliServer: idx=0,	conv_latency=8.660712339915335,	llm_latency=1.3661189284175634
+2026-02-24 11:28:21,193 MainProcess __main__ INFO     [main] tem_thw=[20, 12, 16], spa_thw=[10, 24, 32], tem_size=960, spa_size=1920, actual_video_tokens=2880, dummy_video_tokens_value=11520
+2026-02-24 11:28:25,821 MainProcess __main__ INFO     [main] prompt_len=2904, attn_len=2904, max_pos=32768, eos_id=151645
+2026-02-24 11:28:43,490 MainProcess __main__ INFO     [main] gen_len=512, eos_hit=False
+2026-02-24 11:28:43,491 MainProcess __main__ INFO     [main] output_len=771, token_count=256, rep_ratio=0.992
+2026-02-24 11:28:43,492 MainProcess __main__ INFO     CliServer: idx=1,	real_sleep=18.722525 (18.722525, 18.722525),	conv_latency=22.298640 (22.298640, 22.298640)
+2026-02-24 11:28:43,492 MainProcess __main__ INFO     CliServer: llm_latency=17.668952 (17.668952, 17.668952)
+2026-02-24 11:28:43,492 MainProcess __main__ INFO     CliServer: llm_latency_memoryio=0.000057 (0.000057, 0.000057)
+2026-02-24 11:28:53,554 MainProcess __main__ INFO     [main] tem_thw=[20, 12, 16], spa_thw=[10, 24, 32], tem_size=960, spa_size=1920, actual_video_tokens=2880, dummy_video_tokens_value=11520
